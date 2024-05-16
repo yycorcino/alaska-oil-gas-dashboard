@@ -5,7 +5,8 @@
   "main": "server.ts",
   "scripts": {
     "dev": "nodemon src/server.ts",
-    "buildDist": "tsc"
+    "buildDist": "tsc",
+    "vercel-build": "echo dummy build"
   },
   "keywords": [],
   "author": "",
