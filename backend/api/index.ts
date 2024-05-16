@@ -10,4 +10,4 @@ app.get("/", (req, res) => {
 const userRouter = require("./routes/dashboard");
 app.use("/dashboard", userRouter);
 
-app.listen(3001);
+app.listen(3000);

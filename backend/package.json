@@ -2,9 +2,9 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Express API for Alaska oil and gas information.",
-  "main": "server.ts",
+  "main": "index.ts",
   "scripts": {
-    "dev": "nodemon src/server.ts",
+    "dev": "nodemon api/index.ts",
     "buildDist": "tsc",
     "vercel-build": "echo dummy build"
   },
