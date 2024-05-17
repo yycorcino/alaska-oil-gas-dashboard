@@ -1,3 +1,5 @@
+// entry point into Express JS Rest API
+
 import express = require("express");
 const app = express();
 
@@ -6,7 +8,7 @@ app.get("/", (req, res) => {
   res.status(404).json({ message: "Error" });
 });
 
-// set api call route; base url: /dashboard
+// set api call route; base url: "/dashboard"
 const userRouter = require("./routes/dashboard");
 app.use("/dashboard", userRouter);
 
