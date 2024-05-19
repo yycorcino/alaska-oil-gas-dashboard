@@ -3,8 +3,11 @@
 const express = require("express");
 const request = require("request");
 import { CompleteProductionAPIData } from "./interfaces/production";
+import { CompleteNglAPIData } from "./interfaces/ngl";
 
 const router = express.Router();
+
+/* ---------- Production ---------- */
 
 const baseProdUrl: string =
   "http://aogweb.state.ak.us/DataMiner4/WebServices/Production.asmx/GetDataTablesResponse";
@@ -123,6 +126,120 @@ const getMonthOfProductionData = async (targetMonth: string) => {
   return resp2;
 };
 
+/* ---------- Natural Gas Liquid ---------- */
+
+const baseNGLUrl: string = "http://aogweb.state.ak.us/DataMiner4/WebServices/NaturalGasLiquid.asmx/GetDataTablesResponse";
+
+/**
+ * Function handles intial response from Alaska NGL API:
+ * cleans data and formatting into a managable data structure.
+ *
+ * @param {string} str - API response.
+ *
+ * @returns {CompleteNglAPIData} - Formatted data.
+ */
+const cleanNglResponse = (str: string) => {
+  // turn string into json
+  let jsonResponse = JSON.parse(str);
+  let data = JSON.parse(jsonResponse["d"]);
+
+  // get result data; remove unnecessary data
+  const deleteTypes = [
+    "FacilityNumber",
+    "FacilityName",
+    "Area",
+    "Field",
+    "Pool",
+    "Days",
+  ];
+  for (let i = 0; i < data["data"].length; i++) {
+    for (let type of deleteTypes) {
+      delete data["data"][i][type];
+    }
+  }
+
+  // get total of ngl
+  let totals = data["totals"]["nglTotal"];
+
+  return { results: data["data"], totals: totals } as CompleteNglAPIData;
+};
+
+/**
+ * Function controls the gathering of data from Alaska NGL API.
+ * First, get request to get total entires. Second, get request to get
+ * all total entries with 1 request.
+ *
+ * @param {string} targetMonth: The date range of data.
+ *
+ * @returns {CompleteNglAPIData} - Formatted data.
+ */
+const getMonthOfNglData = async (targetMonth: string) => {
+  let payload = {
+    draw: 1,
+    start: 0,
+    length: 1,
+    sortColumn: 6,
+    sortDirection: "desc",
+    startDate: targetMonth,
+    endDate: targetMonth,
+  };
+  
+  // first request to get the total entries of month and total amount of NGL
+  const resp1 = await new Promise((resolve, reject) => {
+    request(
+      {
+        method: "GET",
+        uri:
+          baseNGLUrl +
+          "?requestParameters=" +
+          encodeURIComponent(JSON.stringify(payload)),
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+      },
+      function (err, res, body) {
+        if (res.statusCode == 200) {
+          // update payload length
+          let jsonResponse = JSON.parse(body);
+          let data = JSON.parse(jsonResponse["d"]);
+          payload["length"] = data["recordsFiltered"];
+          resolve("dummy"); // dummy return
+        } else {
+          reject({ message: err });
+        }
+      }
+    );
+  });
+
+  // second request to get all entries
+  const resp2 = await new Promise((resolve, reject) => {
+    request(
+      {
+        method: "GET",
+        uri:
+          baseNGLUrl +
+          "?requestParameters=" +
+          encodeURIComponent(JSON.stringify(payload)),
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+      },
+      function (err, res, body) {
+        if (res.statusCode == 200) {
+          res = cleanNglResponse(body);
+          resolve(res);
+        } else {
+          reject({ message: err });
+        }
+      }
+    );
+  });
+
+  return resp2;
+};
+
+/* ---------- Parse Data to Create Meaning ---------- */
+
 /**
  * Function handles parsing through data and determines percentages.
  *
@@ -181,9 +298,10 @@ router.get("/", async (req, res) => {
 
 // controller to get all data
 router.get("/:date", async (req, res) => {
-  const reqParse = await getMonthOfProductionData(req.date);
+  const prodParse = await getMonthOfProductionData(req.date);
+  const nglParse = await getMonthOfNglData(req.date);
 
-  res.status(200).send(reqParse);
+  res.status(200).send({"prod": prodParse, "ngl": nglParse});
 });
 
 // captures values and verify format
