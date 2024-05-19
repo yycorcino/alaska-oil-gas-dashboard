@@ -2,195 +2,74 @@
 
 const express = require("express");
 const request = require("request");
+import { deleteTypesForProduction, deleteTypesForNgl, baseProdUrl, baseNGLUrl } from "./globals/constant";
 import { CompleteProductionAPIData } from "./interfaces/production";
 import { CompleteNglAPIData } from "./interfaces/ngl";
 
 const router = express.Router();
 
-/* ---------- Production ---------- */
-
-const baseProdUrl: string =
-  "http://aogweb.state.ak.us/DataMiner4/WebServices/Production.asmx/GetDataTablesResponse";
+/* ---------- Production/ NGL ---------- */
 
 /**
- * Function handles intial response from Alaska Production API:
+ * Function handles intial response from Alaska Production or NGL API:
  * cleans data and formatting into a managable data structure.
  *
  * @param {string} str - API response.
+ * @param {string} deleteTypes - Keys to be deleted.
  *
- * @returns {CompleteProductionAPIData} - Formatted data.
+ * @returns {T} - Formatted data.
  */
-const cleanProductionResponse = (str: string) => {
+const cleanResponse = <T>(str: string, deleteTypes: string[]): T => {
   // turn string into json
   let jsonResponse = JSON.parse(str);
   let data = JSON.parse(jsonResponse["d"]);
 
-  // get result data; remove unnecessary data
-  const deleteTypes = [
-    "Permit",
-    "API",
-    "Permit",
-    "WellStatus",
-    "Area",
-    "Field",
-    "Pool",
-    "Pad",
-    "ProductionMethod",
-    "Days",
-  ];
+  // remove unnecessary data
   for (let i = 0; i < data["data"].length; i++) {
     for (let type of deleteTypes) {
       delete data["data"][i][type];
     }
   }
 
-  // get total oil, gas, water
+  // get totals
   let totals = data["totals"];
   delete totals["daysTotal"];
 
-  return { results: data["data"], totals: totals } as CompleteProductionAPIData;
+  return { results: data["data"], totals: totals } as T;
 };
 
 /**
- * Function controls the gathering of data from Alaska Production API.
+ * Function controls the gathering of data from Alaska Production or NGL API.
  * First, get request to get total entires. Second, get request to get
  * all total entries with 1 request.
  *
- * @param {string} targetMonth: The date range of data.
+ * @param {string} targetMonth - The date range of data.
+ * @param {string} dateStartName - The key name for start date.
+ * @param {string} dateEndName - The key name for end date.
+ * @param {number} colNum - The number of total columns.
+ * @param {string} url - The API Endpoint.
+ * @param {string[]} deleteTypes - Keys to be deleted passed to cleanResposne Function.
  *
- * @returns {CompleteProductionAPIData} - Formatted data.
+ * @returns {T} - Formatted data.
  */
-const getMonthOfProductionData = async (targetMonth: string) => {
+const getDataByMonth = async <T>(targetMonth: string, dateStartName: string, dateEndName: string, colNum: number, url: string, deleteTypes: string[] ): Promise<T> => {
   let payload = {
     draw: 1,
     start: 0,
     length: 1,
-    sortColumn: 9,
+    sortColumn: colNum,
     sortDirection: "desc",
-    productionStartDate: targetMonth,
-    productionEndDate: targetMonth,
   };
-
-  // first request to get the total entries of month and total amount of oil, gas, water
-  const resp1 = await new Promise((resolve, reject) => {
-    request(
-      {
-        method: "GET",
-        uri:
-          baseProdUrl +
-          "?requestParameters=" +
-          encodeURIComponent(JSON.stringify(payload)),
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-      },
-      function (err, res, body) {
-        if (res.statusCode == 200) {
-          // update payload length
-          let jsonResponse = JSON.parse(body);
-          let data = JSON.parse(jsonResponse["d"]);
-          payload["length"] = data["recordsFiltered"];
-
-          resolve("dummy"); // dummy return
-        } else {
-          reject({ message: err });
-        }
-      }
-    );
-  });
-
-  // second request to get all entries
-  const resp2 = await new Promise((resolve, reject) => {
-    request(
-      {
-        method: "GET",
-        uri:
-          baseProdUrl +
-          "?requestParameters=" +
-          encodeURIComponent(JSON.stringify(payload)),
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-      },
-      function (err, res, body) {
-        if (res.statusCode == 200) {
-          res = cleanProductionResponse(body);
-          resolve(res);
-        } else {
-          reject({ message: err });
-        }
-      }
-    );
-  });
-
-  return resp2;
-};
-
-/* ---------- Natural Gas Liquid ---------- */
-
-const baseNGLUrl: string = "http://aogweb.state.ak.us/DataMiner4/WebServices/NaturalGasLiquid.asmx/GetDataTablesResponse";
-
-/**
- * Function handles intial response from Alaska NGL API:
- * cleans data and formatting into a managable data structure.
- *
- * @param {string} str - API response.
- *
- * @returns {CompleteNglAPIData} - Formatted data.
- */
-const cleanNglResponse = (str: string) => {
-  // turn string into json
-  let jsonResponse = JSON.parse(str);
-  let data = JSON.parse(jsonResponse["d"]);
-
-  // get result data; remove unnecessary data
-  const deleteTypes = [
-    "FacilityNumber",
-    "FacilityName",
-    "Area",
-    "Field",
-    "Pool",
-    "Days",
-  ];
-  for (let i = 0; i < data["data"].length; i++) {
-    for (let type of deleteTypes) {
-      delete data["data"][i][type];
-    }
-  }
-
-  // get total of ngl
-  let totals = data["totals"]["nglTotal"];
-
-  return { results: data["data"], totals: totals } as CompleteNglAPIData;
-};
-
-/**
- * Function controls the gathering of data from Alaska NGL API.
- * First, get request to get total entires. Second, get request to get
- * all total entries with 1 request.
- *
- * @param {string} targetMonth: The date range of data.
- *
- * @returns {CompleteNglAPIData} - Formatted data.
- */
-const getMonthOfNglData = async (targetMonth: string) => {
-  let payload = {
-    draw: 1,
-    start: 0,
-    length: 1,
-    sortColumn: 6,
-    sortDirection: "desc",
-    startDate: targetMonth,
-    endDate: targetMonth,
-  };
+  payload[dateStartName] = targetMonth
+  payload[dateEndName] = targetMonth
   
-  // first request to get the total entries of month and total amount of NGL
+  // first request to get the total entries of month and total amount of oil, gas, water, and ngl
   const resp1 = await new Promise((resolve, reject) => {
     request(
       {
         method: "GET",
         uri:
-          baseNGLUrl +
+          url +
           "?requestParameters=" +
           encodeURIComponent(JSON.stringify(payload)),
         headers: {
@@ -217,7 +96,7 @@ const getMonthOfNglData = async (targetMonth: string) => {
       {
         method: "GET",
         uri:
-          baseNGLUrl +
+          url +
           "?requestParameters=" +
           encodeURIComponent(JSON.stringify(payload)),
         headers: {
@@ -226,8 +105,7 @@ const getMonthOfNglData = async (targetMonth: string) => {
       },
       function (err, res, body) {
         if (res.statusCode == 200) {
-          res = cleanNglResponse(body);
-          resolve(res);
+          resolve(cleanResponse<T>(body, deleteTypes));
         } else {
           reject({ message: err });
         }
@@ -235,7 +113,7 @@ const getMonthOfNglData = async (targetMonth: string) => {
     );
   });
 
-  return resp2;
+  return resp2 as T;
 };
 
 /* ---------- Parse Data to Create Meaning ---------- */
@@ -283,7 +161,7 @@ router.get("/", async (req, res) => {
       },
       function (err, res, body) {
         if (res.statusCode == 200) {
-          // parse through API response
+          // parse through API response to get newest report date
           let jsonResponse = JSON.parse(body);
           let data = JSON.parse(jsonResponse["d"]);
           resolve(data["data"][0]["ReportDate"].replace("/", "-"));
@@ -298,10 +176,11 @@ router.get("/", async (req, res) => {
 
 // controller to get all data
 router.get("/:date", async (req, res) => {
-  const prodParse = await getMonthOfProductionData(req.date);
-  const nglParse = await getMonthOfNglData(req.date);
+  const prodData: CompleteProductionAPIData = await getDataByMonth<CompleteProductionAPIData>(req.date, "productionStartDate", "productionEndDate", 9, baseProdUrl, deleteTypesForProduction);
+  const nglData: CompleteNglAPIData = await getDataByMonth<CompleteNglAPIData>(req.date, "startDate", "endDate", 6, baseNGLUrl, deleteTypesForNgl);
+  const allData = {"prodData": prodData, "nglData": nglData}
 
-  res.status(200).send({"prod": prodParse, "ngl": nglParse});
+  res.status(200).send(allData);
 });
 
 // captures values and verify format
