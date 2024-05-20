@@ -10,7 +10,9 @@ type NglAPITotals = {
 
 interface ListNglAPIResults extends Array<NglAPIResults> {}
 
-export interface CompleteNglAPIData {
+interface CompleteNglAPIData {
   results: ListNglAPIResults;
   totals: NglAPITotals;
 }
+
+export {ListNglAPIResults, CompleteNglAPIData}

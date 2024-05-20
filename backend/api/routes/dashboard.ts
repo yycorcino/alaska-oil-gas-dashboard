@@ -3,6 +3,7 @@
 const express = require("express");
 const request = require("request");
 import { deleteTypesForProduction, deleteTypesForNgl, baseProdUrl, baseNGLUrl } from "./globals/constant";
+import { ResourceCountProps, ResourceCountInterface, CountTopOperatorsProps, ListOfCountTopOperatorsInterface } from "./interfaces/global";
 import { CompleteProductionAPIData } from "./interfaces/production";
 import { CompleteNglAPIData } from "./interfaces/ngl";
 
@@ -119,20 +120,75 @@ const getDataByMonth = async <T>(targetMonth: string, dateStartName: string, dat
 /* ---------- Parse Data to Create Meaning ---------- */
 
 /**
- * Function handles parsing through data and determines percentages.
+ * Function sets resources count and units.
  *
- * @param {ListProductionAPIData} data - Data for Oil, Gas, Water, and Natural Gas.
+ * @param {ResourceCountProps} data - Data of total Oil, Gas, Water, and Natural Gas Liquid.
  *
- * @returns {} -
+ * @returns {ResourceCountInterface} - Formatted data.
  */
-const resourcePercentage = (data) => {
-  let resources = {
-    data: { oil: 0, gas: 0, water: 0, naturalGas: 0 },
-    units: "%",
+const resourceCount = (data: ResourceCountProps) => {
+  const resources: ResourceCountInterface = { 
+    "oilTotal": {"count": data["oilTotal"], "units": "BBL"},
+    "gasTotal": {"count": data["gasTotal"], "units": "BBL"},
+    "waterTotal": {"count": data["waterTotal"], "units": "BBL"},
+    "nglTotal": {"count": data["nglTotal"], "units": "MCF"} 
   };
 
   return resources;
 };
+
+/**
+ * Function counts each Operator production details.
+ *
+ * @param {CountTopOperatorsProps} data - Data of total Oil, Gas, Water, and Natural Gas Liquid.
+ *
+ * @returns {ListOfCountTopOperatorsInterface} - Formatted data.
+ */
+const countTopOperators = (data: CountTopOperatorsProps) => {
+  let totalOfOperators = {}
+  
+  // original data is stored as string, add as number
+  data["prodData"].forEach((elem, index, arr) => {
+  
+    if (totalOfOperators.hasOwnProperty(elem["OperatorName"])) {
+      totalOfOperators[elem["OperatorName"]]["Oil"] = totalOfOperators[elem["OperatorName"]]["Oil"] + Number(elem["Oil"].replace(/,/g, ""))
+      totalOfOperators[elem["OperatorName"]]["Gas"] = totalOfOperators[elem["OperatorName"]]["Gas"] + Number(elem["Gas"].replace(/,/g, ""))
+      totalOfOperators[elem["OperatorName"]]["Water"] = totalOfOperators[elem["OperatorName"]]["Water"] + Number(elem["Water"].replace(/,/g, ""))
+    }
+    else {
+      totalOfOperators[elem["OperatorName"]] = {}
+      totalOfOperators[elem["OperatorName"]]["Oil"] = Number(elem["Oil"].replace(/,/g, ""))
+      totalOfOperators[elem["OperatorName"]]["Gas"] = Number(elem["Gas"].replace(/,/g, ""))
+      totalOfOperators[elem["OperatorName"]]["Water"] = Number(elem["Water"].replace(/,/g, ""))
+    }
+  });
+
+  data["nglData"].forEach((elem, index, arr) => {
+    if (totalOfOperators.hasOwnProperty(elem["Operator"]) && totalOfOperators[elem["Operator"]].hasOwnProperty("NGL")) {
+      totalOfOperators[elem["Operator"]]["NGL"] = totalOfOperators[elem["Operator"]]["NGL"] + Number(elem["NglProduction"].replace(/,/g, ""))
+    }
+    else if (totalOfOperators.hasOwnProperty(elem["Operator"]) && !totalOfOperators[elem["Operator"]].hasOwnProperty("NGL")) {
+      totalOfOperators[elem["Operator"]]["NGL"] = Number(elem["NglProduction"].replace(/,/g, ""))
+    }
+    else {
+      totalOfOperators[elem["Operator"]] = {}
+      totalOfOperators[elem["Operator"]]["Oil"] = 0
+      totalOfOperators[elem["Operator"]]["Gas"] = 0
+      totalOfOperators[elem["Operator"]]["Water"] = 0
+      totalOfOperators[elem["Operator"]]["NGL"] = Number(elem["NglProduction"].replace(/,/g, ""))
+    }
+  });
+
+  // convert numbers to strings
+  for (var name in totalOfOperators) {
+    for (var key in totalOfOperators[name]) {
+      totalOfOperators[name][key] = totalOfOperators[name][key].toLocaleString()
+    }
+  } 
+
+  return totalOfOperators as ListOfCountTopOperatorsInterface;
+}
+
 
 /* ---------- Routing ---------- */
 
@@ -180,7 +236,15 @@ router.get("/:date", async (req, res) => {
   const nglData: CompleteNglAPIData = await getDataByMonth<CompleteNglAPIData>(req.date, "startDate", "endDate", 6, baseNGLUrl, deleteTypesForNgl);
   const allData = {"prodData": prodData, "nglData": nglData}
 
-  res.status(200).send(allData);
+  // data to be sent back
+  let sendData = {}
+  const resourceCountParams: ResourceCountProps = Object.assign(allData["prodData"]["totals"], allData["nglData"]["totals"])
+  sendData["resourceCount"] = resourceCount(resourceCountParams)
+
+  const countTopOperatorsParams: CountTopOperatorsProps = {"prodData": allData["prodData"]["results"], "nglData": allData["nglData"]["results"]}
+  sendData["topOperators"] = countTopOperators(countTopOperatorsParams)
+
+  res.status(200).send(sendData);
 });
 
 // captures values and verify format

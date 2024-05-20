@@ -16,7 +16,9 @@ type ProductionAPITotals = {
 
 interface ListProductionAPIResults extends Array<ProductionAPIResults> {}
 
-export interface CompleteProductionAPIData {
+interface CompleteProductionAPIData {
   results: ListProductionAPIResults;
   totals: ProductionAPITotals;
 }
+
+export {ListProductionAPIResults, CompleteProductionAPIData}
