@@ -2,36 +2,67 @@ import { ListNglAPIResults } from "./ngl";
 import { ListProductionAPIResults } from "./production";
 
 type ResourceCountProps = {
-    oilTotal: string,
-    gasTotal: string,
-    waterTotal: string,
-    nglTotal: string  
-}
-
-type ResourceDataType = {
-    count: string;
-    units: string;
-}
-
-interface ResourceCountInterface {
-    oilTotal: ResourceDataType;
-    gasTotal: ResourceDataType;
-    waterTotal: ResourceDataType;
-    nglTotal: ResourceDataType;
-}
-
-type CountTopOperatorsProps = {
-    prodData: ListProductionAPIResults;
-    nglData: ListNglAPIResults;
+  oilTotal: string;
+  gasTotal: string;
+  waterTotal: string;
+  nglTotal: string;
 };
 
-interface ListOfCountTopOperatorsInterface {
-    [operatorName: string]: {
-        Oil: number;
-        Gas: number;
-        Water: number;
-        NGL?: number;
-    };
+type ResourceDataType = {
+  count: string;
+  units: string;
+};
+
+interface ResourceCount {
+  oilTotal: ResourceDataType;
+  gasTotal: ResourceDataType;
+  waterTotal: ResourceDataType;
+  nglTotal: ResourceDataType;
 }
 
-export {ResourceCountProps, ResourceCountInterface, CountTopOperatorsProps, ListOfCountTopOperatorsInterface };
+type ProductionDetailsProps = {
+  prodData: ListProductionAPIResults;
+  nglData: ListNglAPIResults;
+};
+
+type CountUnitType = {
+  count: string;
+  units: string;
+};
+
+type TotalOfOperators = {
+  [OperatorName: string]: {
+    Oil: CountUnitType;
+    Gas: CountUnitType;
+    Water: CountUnitType;
+    NGL?: CountUnitType;
+  };
+};
+
+type TotalsByWell = {
+  [WellName: string]: {
+    OperatorName: string;
+    Gas: CountUnitType;
+    Water: CountUnitType;
+  };
+};
+
+type TotalsByFacility = {
+  [operatorName: string]: {
+    OperatorName: string;
+    NGL?: CountUnitType;
+  };
+};
+
+interface ProductionDetails {
+  totalOfOperators: TotalOfOperators;
+  totalsByWell: TotalsByWell;
+  totalsByFacility: TotalsByFacility;
+}
+
+export {
+  ResourceCountProps,
+  ResourceCount,
+  ProductionDetailsProps,
+  ProductionDetails,
+};

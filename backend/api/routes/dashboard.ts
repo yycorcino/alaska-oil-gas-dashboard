@@ -2,8 +2,18 @@
 
 const express = require("express");
 const request = require("request");
-import { deleteTypesForProduction, deleteTypesForNgl, baseProdUrl, baseNGLUrl } from "./globals/constant";
-import { ResourceCountProps, ResourceCountInterface, CountTopOperatorsProps, ListOfCountTopOperatorsInterface } from "./interfaces/global";
+import {
+  deleteTypesForProduction,
+  deleteTypesForNgl,
+  baseProdUrl,
+  baseNGLUrl,
+} from "./globals/constant";
+import {
+  ResourceCountProps,
+  ResourceCount,
+  ProductionDetailsProps,
+  ProductionDetails,
+} from "./interfaces/global";
 import { CompleteProductionAPIData } from "./interfaces/production";
 import { CompleteNglAPIData } from "./interfaces/ngl";
 
@@ -16,7 +26,7 @@ const router = express.Router();
  * cleans data and formatting into a managable data structure.
  *
  * @param {string} str - API response.
- * @param {string} deleteTypes - Keys to be deleted.
+ * @param {string[]} deleteTypes - Keys to be deleted.
  *
  * @returns {T} - Formatted data.
  */
@@ -53,7 +63,14 @@ const cleanResponse = <T>(str: string, deleteTypes: string[]): T => {
  *
  * @returns {T} - Formatted data.
  */
-const getDataByMonth = async <T>(targetMonth: string, dateStartName: string, dateEndName: string, colNum: number, url: string, deleteTypes: string[] ): Promise<T> => {
+const getDataByMonth = async <T>(
+  targetMonth: string,
+  dateStartName: string,
+  dateEndName: string,
+  colNum: number,
+  url: string,
+  deleteTypes: string[]
+): Promise<T> => {
   let payload = {
     draw: 1,
     start: 0,
@@ -61,9 +78,9 @@ const getDataByMonth = async <T>(targetMonth: string, dateStartName: string, dat
     sortColumn: colNum,
     sortDirection: "desc",
   };
-  payload[dateStartName] = targetMonth
-  payload[dateEndName] = targetMonth
-  
+  payload[dateStartName] = targetMonth;
+  payload[dateEndName] = targetMonth;
+
   // first request to get the total entries of month and total amount of oil, gas, water, and ngl
   const resp1 = await new Promise((resolve, reject) => {
     request(
@@ -120,75 +137,171 @@ const getDataByMonth = async <T>(targetMonth: string, dateStartName: string, dat
 /* ---------- Parse Data to Create Meaning ---------- */
 
 /**
- * Function sets resources count and units.
+ * Function sets total of all resources count and units.
  *
  * @param {ResourceCountProps} data - Data of total Oil, Gas, Water, and Natural Gas Liquid.
  *
- * @returns {ResourceCountInterface} - Formatted data.
+ * @returns {ResourceCount} - Formatted data.
  */
 const resourceCount = (data: ResourceCountProps) => {
-  const resources: ResourceCountInterface = { 
-    "oilTotal": {"count": data["oilTotal"], "units": "BBL"},
-    "gasTotal": {"count": data["gasTotal"], "units": "BBL"},
-    "waterTotal": {"count": data["waterTotal"], "units": "BBL"},
-    "nglTotal": {"count": data["nglTotal"], "units": "MCF"} 
+  const resources: ResourceCount = {
+    oilTotal: {
+      count: Number(data["oilTotal"]).toLocaleString(),
+      units: "BBL",
+    },
+    gasTotal: {
+      count: Number(data["gasTotal"]).toLocaleString(),
+      units: "MCF",
+    },
+    waterTotal: {
+      count: Number(data["waterTotal"]).toLocaleString(),
+      units: "BBL",
+    },
+    nglTotal: {
+      count: Number(data["nglTotal"]).toLocaleString(),
+      units: "BBL",
+    },
   };
-
   return resources;
 };
 
 /**
- * Function counts each Operator production details.
+ * Function counts each Operator production details, each Well
+ * production(oil, gas, water) details, and each Facility(ngl) product details.
  *
- * @param {CountTopOperatorsProps} data - Data of total Oil, Gas, Water, and Natural Gas Liquid.
+ * @param {ProductionDetailsProps} data - Data of total Oil, Gas, Water, and Natural Gas Liquid.
  *
- * @returns {ListOfCountTopOperatorsInterface} - Formatted data.
+ * @returns {ProductionDetails} - Formatted data.
  */
-const countTopOperators = (data: CountTopOperatorsProps) => {
-  let totalOfOperators = {}
-  
-  // original data is stored as string, add as number
+const productionDetails = (data: ProductionDetailsProps) => {
+  let totalOfOperators = {};
+  let totalsByWell = {};
+  let totalsByFacility = {};
+
+  // original data is stored as string, add as a number
   data["prodData"].forEach((elem, index, arr) => {
-  
     if (totalOfOperators.hasOwnProperty(elem["OperatorName"])) {
-      totalOfOperators[elem["OperatorName"]]["Oil"] = totalOfOperators[elem["OperatorName"]]["Oil"] + Number(elem["Oil"].replace(/,/g, ""))
-      totalOfOperators[elem["OperatorName"]]["Gas"] = totalOfOperators[elem["OperatorName"]]["Gas"] + Number(elem["Gas"].replace(/,/g, ""))
-      totalOfOperators[elem["OperatorName"]]["Water"] = totalOfOperators[elem["OperatorName"]]["Water"] + Number(elem["Water"].replace(/,/g, ""))
+      totalOfOperators[elem["OperatorName"]]["Oil"] += Number(
+        elem["Oil"].replace(/,/g, "")
+      );
+      totalOfOperators[elem["OperatorName"]]["Gas"] += Number(
+        elem["Gas"].replace(/,/g, "")
+      );
+      totalOfOperators[elem["OperatorName"]]["Water"] += Number(
+        elem["Water"].replace(/,/g, "")
+      );
+    } else {
+      totalOfOperators[elem["OperatorName"]] = {};
+      totalOfOperators[elem["OperatorName"]]["Oil"] = Number(
+        elem["Oil"].replace(/,/g, "")
+      );
+      totalOfOperators[elem["OperatorName"]]["Gas"] = Number(
+        elem["Gas"].replace(/,/g, "")
+      );
+      totalOfOperators[elem["OperatorName"]]["Water"] = Number(
+        elem["Water"].replace(/,/g, "")
+      );
     }
-    else {
-      totalOfOperators[elem["OperatorName"]] = {}
-      totalOfOperators[elem["OperatorName"]]["Oil"] = Number(elem["Oil"].replace(/,/g, ""))
-      totalOfOperators[elem["OperatorName"]]["Gas"] = Number(elem["Gas"].replace(/,/g, ""))
-      totalOfOperators[elem["OperatorName"]]["Water"] = Number(elem["Water"].replace(/,/g, ""))
+
+    if (totalsByWell.hasOwnProperty(elem["WellName"])) {
+      totalsByWell[elem["WellName"]]["Oil"]["count"] += Number(
+        elem["Oil"].replace(/,/g, "")
+      );
+      totalsByWell[elem["WellName"]]["Gas"]["count"] += Number(
+        elem["Gas"].replace(/,/g, "")
+      );
+      totalsByWell[elem["WellName"]]["Water"]["count"] += Number(
+        elem["Water"].replace(/,/g, "")
+      );
+    } else {
+      totalsByWell[elem["WellName"]] = {};
+      totalsByWell[elem["WellName"]]["OperatorName"] = elem["OperatorName"];
+      totalsByWell[elem["WellName"]]["Oil"] = {};
+      totalsByWell[elem["WellName"]]["Oil"]["count"] = Number(
+        elem["Oil"].replace(/,/g, "")
+      );
+      totalsByWell[elem["WellName"]]["Oil"]["units"] = "BBL";
+      totalsByWell[elem["WellName"]]["Gas"] = {};
+      totalsByWell[elem["WellName"]]["Gas"]["count"] = Number(
+        elem["Gas"].replace(/,/g, "")
+      );
+      totalsByWell[elem["WellName"]]["Gas"]["units"] = "BBL";
+      totalsByWell[elem["WellName"]]["Water"] = {};
+      totalsByWell[elem["WellName"]]["Water"]["count"] = Number(
+        elem["Water"].replace(/,/g, "")
+      );
+      totalsByWell[elem["WellName"]]["Water"]["units"] = "BBL";
     }
   });
 
   data["nglData"].forEach((elem, index, arr) => {
-    if (totalOfOperators.hasOwnProperty(elem["Operator"]) && totalOfOperators[elem["Operator"]].hasOwnProperty("NGL")) {
-      totalOfOperators[elem["Operator"]]["NGL"] = totalOfOperators[elem["Operator"]]["NGL"] + Number(elem["NglProduction"].replace(/,/g, ""))
+    if (
+      totalOfOperators.hasOwnProperty(elem["Operator"]) &&
+      totalOfOperators[elem["Operator"]].hasOwnProperty("NGL")
+    ) {
+      totalOfOperators[elem["Operator"]]["NGL"] =
+        totalOfOperators[elem["Operator"]]["NGL"] +
+        Number(elem["NglProduction"].replace(/,/g, ""));
+    } else if (
+      totalOfOperators.hasOwnProperty(elem["Operator"]) &&
+      !totalOfOperators[elem["Operator"]].hasOwnProperty("NGL")
+    ) {
+      totalOfOperators[elem["Operator"]]["NGL"] = Number(
+        elem["NglProduction"].replace(/,/g, "")
+      );
+    } else {
+      totalOfOperators[elem["Operator"]] = {};
+      totalOfOperators[elem["Operator"]]["Oil"] = 0;
+      totalOfOperators[elem["Operator"]]["Gas"] = 0;
+      totalOfOperators[elem["Operator"]]["Water"] = 0;
+      totalOfOperators[elem["Operator"]]["NGL"] = Number(
+        elem["NglProduction"].replace(/,/g, "")
+      );
     }
-    else if (totalOfOperators.hasOwnProperty(elem["Operator"]) && !totalOfOperators[elem["Operator"]].hasOwnProperty("NGL")) {
-      totalOfOperators[elem["Operator"]]["NGL"] = Number(elem["NglProduction"].replace(/,/g, ""))
-    }
-    else {
-      totalOfOperators[elem["Operator"]] = {}
-      totalOfOperators[elem["Operator"]]["Oil"] = 0
-      totalOfOperators[elem["Operator"]]["Gas"] = 0
-      totalOfOperators[elem["Operator"]]["Water"] = 0
-      totalOfOperators[elem["Operator"]]["NGL"] = Number(elem["NglProduction"].replace(/,/g, ""))
+
+    if (totalsByFacility.hasOwnProperty(elem["FacilityName"])) {
+      totalsByFacility[elem["FacilityName"]]["NGL"]["count"] += Number(
+        elem["NglProduction"].replace(/,/g, "")
+      );
+    } else {
+      totalsByFacility[elem["FacilityName"]] = {};
+      totalsByFacility[elem["FacilityName"]]["OperatorName"] = elem["Operator"];
+      totalsByFacility[elem["FacilityName"]]["NGL"] = {};
+      totalsByFacility[elem["FacilityName"]]["NGL"]["count"] = Number(
+        elem["NglProduction"].replace(/,/g, "")
+      );
+      totalsByFacility[elem["FacilityName"]]["NGL"]["units"] = "BBL";
     }
   });
 
   // convert numbers to strings
   for (var name in totalOfOperators) {
     for (var key in totalOfOperators[name]) {
-      totalOfOperators[name][key] = totalOfOperators[name][key].toLocaleString()
+      totalOfOperators[name][key] =
+        totalOfOperators[name][key].toLocaleString();
     }
-  } 
+  }
 
-  return totalOfOperators as ListOfCountTopOperatorsInterface;
-}
+  for (var name in totalsByWell) {
+    totalsByWell[name]["Oil"]["count"] =
+      totalsByWell[name]["Oil"]["count"].toLocaleString();
+    totalsByWell[name]["Gas"]["count"] =
+      totalsByWell[name]["Gas"]["count"].toLocaleString();
+    totalsByWell[name]["Water"]["count"] =
+      totalsByWell[name]["Water"]["count"].toLocaleString();
+  }
 
+  for (var name in totalsByFacility) {
+    totalsByFacility[name]["NGL"]["count"] =
+      totalsByFacility[name]["NGL"]["count"].toLocaleString();
+  }
+
+  return {
+    totalOfOperators: totalOfOperators,
+    totalsByWell: totalsByWell,
+    totalsByFacility: totalsByFacility,
+  } as ProductionDetails;
+};
 
 /* ---------- Routing ---------- */
 
@@ -232,17 +345,38 @@ router.get("/", async (req, res) => {
 
 // controller to get all data
 router.get("/:date", async (req, res) => {
-  const prodData: CompleteProductionAPIData = await getDataByMonth<CompleteProductionAPIData>(req.date, "productionStartDate", "productionEndDate", 9, baseProdUrl, deleteTypesForProduction);
-  const nglData: CompleteNglAPIData = await getDataByMonth<CompleteNglAPIData>(req.date, "startDate", "endDate", 6, baseNGLUrl, deleteTypesForNgl);
-  const allData = {"prodData": prodData, "nglData": nglData}
+  const prodData: CompleteProductionAPIData =
+    await getDataByMonth<CompleteProductionAPIData>(
+      req.date,
+      "productionStartDate",
+      "productionEndDate",
+      9,
+      baseProdUrl,
+      deleteTypesForProduction
+    );
+  const nglData: CompleteNglAPIData = await getDataByMonth<CompleteNglAPIData>(
+    req.date,
+    "startDate",
+    "endDate",
+    6,
+    baseNGLUrl,
+    deleteTypesForNgl
+  );
+  const allData = { prodData: prodData, nglData: nglData };
 
   // data to be sent back
-  let sendData = {}
-  const resourceCountParams: ResourceCountProps = Object.assign(allData["prodData"]["totals"], allData["nglData"]["totals"])
-  sendData["resourceCount"] = resourceCount(resourceCountParams)
+  let sendData = {};
+  const resourceCountParams: ResourceCountProps = Object.assign(
+    allData["prodData"]["totals"],
+    allData["nglData"]["totals"]
+  );
+  sendData["resourceCount"] = resourceCount(resourceCountParams);
 
-  const countTopOperatorsParams: CountTopOperatorsProps = {"prodData": allData["prodData"]["results"], "nglData": allData["nglData"]["results"]}
-  sendData["topOperators"] = countTopOperators(countTopOperatorsParams)
+  const productionDetailsParams: ProductionDetailsProps = {
+    prodData: allData["prodData"]["results"],
+    nglData: allData["nglData"]["results"],
+  };
+  sendData["productionDetails"] = productionDetails(productionDetailsParams);
 
   res.status(200).send(sendData);
 });

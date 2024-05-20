@@ -1,9 +1,9 @@
 type NglAPIResults = {
-    Operator: string;
-    ReportData: string;
-    NglProduction: string;
-  };
-  
+  Operator: string;
+  ReportData: string;
+  NglProduction: string;
+};
+
 type NglAPITotals = {
   nglTotal: string;
 };
@@ -15,4 +15,4 @@ interface CompleteNglAPIData {
   totals: NglAPITotals;
 }
 
-export {ListNglAPIResults, CompleteNglAPIData}
+export { ListNglAPIResults, CompleteNglAPIData };

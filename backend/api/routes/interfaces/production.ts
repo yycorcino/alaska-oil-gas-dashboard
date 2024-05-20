@@ -21,4 +21,4 @@ interface CompleteProductionAPIData {
   totals: ProductionAPITotals;
 }
 
-export {ListProductionAPIResults, CompleteProductionAPIData}
+export { ListProductionAPIResults, CompleteProductionAPIData };
