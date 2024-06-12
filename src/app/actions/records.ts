@@ -154,8 +154,8 @@ const refineResourceCount = (data: {
       units: "BBL",
     },
     gasTotal: {
-      count: Number(data["gasTotal"]),
-      units: "MCF",
+      count: Math.round(Number(data["gasTotal"]) / 6000),
+      units: "BBL",
     },
     waterTotal: {
       count: Number(data["waterTotal"]),
@@ -350,5 +350,5 @@ export async function getDashboardDetails(date: string) {
     clientData["productionData"] = refineProductionData(rawProductionData);
   }
 
-  return clientData;
+  return clientData as DashboardDetails;
 }
