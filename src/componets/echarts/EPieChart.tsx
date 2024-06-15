@@ -3,13 +3,13 @@
 import React from "react";
 import ReactECharts from "echarts-for-react";
 
-type optionProps = {
+type OptionProps = {
   name: string;
   value: number;
   units: string;
 };
 
-const createOptions = (dataset: optionProps[]) => {
+const createOptions = (dataset: OptionProps[]) => {
   return {
     tooltip: {
       trigger: "item",
@@ -31,6 +31,9 @@ const createOptions = (dataset: optionProps[]) => {
       bottom: "10%",
       left: "center",
       orient: "horizontal",
+      selected: {
+        Water: false,
+      },
     },
     series: [
       {
