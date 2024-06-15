@@ -63,8 +63,13 @@ const createOptions = (dataset: optionProps[]) => {
 const EPieChart = ({ data }: { data: ResourceCount }) => {
   // format to be accepted by ECharts
   const chartData = Object.entries(data).map(([key, value]) => {
+    // update visual label names
+    let tempName = key.replace("Total", "");
+    if (tempName.charAt(0).toUpperCase() === "N") {
+      tempName = tempName.toUpperCase();
+    }
     return {
-      name: key.replace("Total", ""),
+      name: tempName.charAt(0).toUpperCase() + tempName.slice(1),
       value: value.count,
       units: value.units,
     };
