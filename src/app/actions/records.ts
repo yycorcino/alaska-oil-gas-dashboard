@@ -204,7 +204,7 @@ const refineProductionData = (data: RefineProductionDataProps) => {
         },
         Gas: {
           count: Number(elem["Gas"].replace(/,/g, "")),
-          units: "BBL",
+          units: "MCF",
         },
         Water: {
           count: Number(elem["Water"].replace(/,/g, "")),
@@ -296,6 +296,18 @@ const refineProductionData = (data: RefineProductionDataProps) => {
       };
     }
   });
+
+  // update MCF units to BBL
+  for (const operator in totalOfOperators) {
+    if (totalOfOperators[operator].Gas.count != 0) {
+      totalOfOperators[operator].Gas.count = Math.round(
+        totalOfOperators[operator].Gas.count / 6000
+      );
+      totalOfOperators[operator].Gas.units = "BBL";
+    } else {
+      totalOfOperators[operator].Gas.units = "BBL";
+    }
+  }
 
   return {
     totalOfOperators,
