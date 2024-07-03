@@ -54,7 +54,8 @@ const createOptions = ({
       data: xAxisLabels,
       axisLabel: {
         interval: 0,
-        rotate: 30,
+        width: 75,
+        overflow: "truncate",
       },
     },
     tooltip: {
