@@ -64,7 +64,7 @@ const MonthSelector = () => {
                 variant="outlined"
                 size="small"
                 sx={{
-                  width: "150px",
+                  width: "190px",
                 }}
               />
             ),
