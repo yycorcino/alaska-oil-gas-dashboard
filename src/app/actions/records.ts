@@ -316,6 +316,26 @@ const refineProductionData = (data: RefineProductionDataProps) => {
   } as RefineProductionData;
 };
 
+const topPerformerFilter = ({
+  target,
+  data,
+}: {
+  target: string;
+  data: any;
+}) => {
+  let largestValue: number = 0;
+  let name: string = "NULL";
+
+  for (const key in data) {
+    if (data[key][target] && data[key][target].count > largestValue) {
+      largestValue = data[key][target].count;
+      name = key;
+    }
+  }
+
+  return name as string;
+};
+
 /**
  * Controller function to get all required data for dashboard.
  *
@@ -347,6 +367,9 @@ export async function getDashboardDetails(date: string) {
   let clientData: DashboardDetails = {
     resourceCount: {} as ResourceCount,
     productionData: {} as RefineProductionData,
+    topOilWellName: "",
+    topGasWellName: "",
+    topGasFacilityName: "",
   };
   if ("totals" in prodData && "totals" in nglData) {
     const rawResourceCount = Object.assign(
@@ -361,6 +384,19 @@ export async function getDashboardDetails(date: string) {
     };
     clientData["productionData"] = refineProductionData(rawProductionData);
   }
+
+  clientData.topOilWellName = topPerformerFilter({
+    target: "Oil",
+    data: clientData.productionData.totalsByWell,
+  });
+  clientData.topGasWellName = topPerformerFilter({
+    target: "Gas",
+    data: clientData.productionData.totalsByWell,
+  });
+  clientData.topGasFacilityName = topPerformerFilter({
+    target: "NGL",
+    data: clientData.productionData.totalsByFacility,
+  });
 
   return clientData as DashboardDetails;
 }

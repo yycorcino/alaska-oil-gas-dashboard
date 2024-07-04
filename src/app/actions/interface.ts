@@ -95,4 +95,7 @@ interface RefineProductionData {
 interface DashboardDetails {
   resourceCount: ResourceCount;
   productionData: RefineProductionData;
+  topOilWellName: string;
+  topGasWellName: string;
+  topGasFacilityName: string;
 }

@@ -81,7 +81,7 @@ const EPieChart = ({ data }: { data: ResourceCount }) => {
   return (
     <ReactECharts
       option={createOptions(chartData)}
-      style={{ minWidth: 300, minHeight: 384 }}
+      style={{ minWidth: 250, minHeight: 384 }}
     />
   );
 };

@@ -54,7 +54,7 @@ const createOptions = ({
       data: xAxisLabels,
       axisLabel: {
         interval: 0,
-        width: 75,
+        width: 50,
         overflow: "truncate",
       },
     },
