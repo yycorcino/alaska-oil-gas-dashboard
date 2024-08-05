@@ -63,7 +63,7 @@ export default async function Dashboard({
               />
               <StatDisplay
                 heading="Top Performing"
-                description="Gas Well"
+                description="Oil Well"
                 value={details.topOilWellName}
               />
               <StatDisplay
