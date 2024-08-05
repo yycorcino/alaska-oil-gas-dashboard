@@ -132,6 +132,38 @@ const getDataByMonth = async <T>(
 /* ---------- Parse Data to Create Meaning ---------- */
 
 /**
+ * Function gets the most recent report date.
+ *
+ * @returns {string} - The recent report date available in AOGCC database.
+ */
+export const getRecentAvailableDate = async (): Promise<string> => {
+  const payload = {
+    draw: 1,
+    start: 0,
+    length: 2,
+    sortColumn: 9,
+    sortDirection: "desc",
+  };
+
+  let resp1 = await fetch(
+    `${baseProdUrl}?requestParameters=${encodeURIComponent(
+      JSON.stringify(payload)
+    )}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    }
+  );
+
+  let dataJSON = await resp1.json();
+  let data = dataJSON["d"];
+  data = JSON.parse(data);
+  return data["data"][0]["ReportDate"];
+};
+
+/**
  * Function sets total of all resources count and units.
  *
  * @param {Object} data - Data containing total counts of Oil, Gas, Water, and Natural Gas Liquid.

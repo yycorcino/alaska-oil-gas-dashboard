@@ -25,6 +25,9 @@ const createOptions = ({
   xAxisLabels,
 }: OptionProps) => {
   return {
+    textStyle: {
+      fontFamily: "Open Sans",
+    },
     legend: {
       selectedMode: true,
       data: seriesNames,

@@ -10,20 +10,16 @@ const StatDisplay = ({
   value: string;
 }) => {
   return (
-    <div className="flex h-full w-full max-w-sm mx-auto bg-white shadow-md rounded-lg flex-col content-center items-center p-4">
-      <div className="flex flex-col pb-5">
-        <h1 className="text-xl font-semibold items-center content-center">
-          {heading}
-        </h1>
-        {description ? (
-          <h3 className="text-lg text-gray-700 items-center mt-2">
-            {description}
-          </h3>
-        ) : null}
+    <div className="flex flex-col h-full w-full max-w-xs mx-auto bg-white shadow-lg rounded-lg p-4">
+      <div className="flex flex-col mb-4">
+        <h1 className="text-xl font-semibold text-gray-800">{heading}</h1>
+        {description && (
+          <h3 className="text-sm text-gray-600 mt-1">{description}</h3>
+        )}
       </div>
-      <p className="text-2xl font-bold content-center items-center justify-center text-center mt-4 pt-4 ">
-        {value}
-      </p>
+      <div className="flex flex-1 items-center justify-center">
+        <p className="text-xl font-bold text-gray-900 pt-3">{value}</p>
+      </div>
     </div>
   );
 };

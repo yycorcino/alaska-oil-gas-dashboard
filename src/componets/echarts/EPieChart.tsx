@@ -11,6 +11,9 @@ type OptionProps = {
 
 const createOptions = (dataset: OptionProps[]) => {
   return {
+    textStyle: {
+      fontFamily: "Open Sans",
+    },
     tooltip: {
       trigger: "item",
       formatter: function (params: {

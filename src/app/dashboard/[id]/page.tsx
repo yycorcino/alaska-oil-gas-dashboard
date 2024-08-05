@@ -3,6 +3,7 @@ import MonthSelector from "@/componets/MonthSelector";
 import EBarStackChart from "@/componets/echarts/EBarStackChart";
 import EPieChart from "@/componets/echarts/EPieChart";
 import StatDisplay from "@/componets/StatDisplay";
+import Header from "@/componets/Header";
 
 export default async function Dashboard({
   params,
@@ -19,7 +20,8 @@ export default async function Dashboard({
     Object.keys(details.productionData.totalsByFacility).length === 0;
 
   return (
-    <main className="min-h-screen flex-col items-center justify-between p-24">
+    <main className="min-h-screen flex-col items-center justify-between p-10">
+      <Header />
       <MonthSelector />
 
       {isDetailsEmpty ? (
@@ -29,12 +31,12 @@ export default async function Dashboard({
       ) : (
         <div>
           <div className="flex bg-white shadow-md rounded-lg flex-col pt-4 mt-3 mb-3">
-            <h1 className="pl-4">Operators</h1>
+            <h1 className="text-base pl-4">Operators</h1>
             <EBarStackChart data={details.productionData.totalOfOperators} />
           </div>
           <div className="flex flex-row items">
             <div className="flex h-full w-full max-w-sm mx-auto bg-white shadow-md rounded-lg flex-col items-center pt-4">
-              <h1>
+              <h1 className="text-base">
                 Total Production:{" "}
                 {(
                   details.resourceCount.gasTotal.count +
@@ -46,7 +48,7 @@ export default async function Dashboard({
               </h1>
               <EPieChart data={details.resourceCount} />
             </div>
-            <div className="grid grid-cols-2 grid-rows-2 gap-4 w-full max-w-md mx-auto">
+            <div className="grid grid-cols-2 grid-rows-2 gap-4 w-full max-w-md mx-auto p-4">
               <StatDisplay
                 heading="Total Wells"
                 description="This month"
@@ -55,15 +57,18 @@ export default async function Dashboard({
                 ).length.toLocaleString()}
               />
               <StatDisplay
-                heading="Top Performing: Gas Well"
+                heading="Top Performing"
+                description="Gas Well"
                 value={details.topGasWellName}
               />
               <StatDisplay
-                heading="Top Performing: Oil Well"
+                heading="Top Performing"
+                description="Gas Well"
                 value={details.topOilWellName}
               />
               <StatDisplay
-                heading="Top Performing: Natural Gas Facility"
+                heading="Top Performing"
+                description="Natural Gas Facility"
                 value={details.topGasFacilityName}
               />
             </div>

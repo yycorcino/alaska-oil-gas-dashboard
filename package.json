@@ -13,6 +13,7 @@
     "@emotion/styled": "^11.11.5",
     "@mui/material": "^5.15.19",
     "@mui/x-date-pickers": "^7.6.2",
+    "@next/font": "^14.2.4",
     "dayjs": "^1.11.11",
     "echarts": "^5.5.0",
     "echarts-for-react": "^3.0.2",
