@@ -1,0 +1,23 @@
+name: 💡 Suggestion
+description: Suggest an enhancement to make the dashboard better
+labels: ['type:enhancement']
+
+body:
+- type: markdown
+  attributes:
+    value: |
+
+      Thank you for your suggestion! If you find the dashboard useful don't forget to give it a like.
+      
+      - Remember to include sufficient details and context.
+      - If you have multiple suggestions please submit them separately so I can track resolution.
+      - Screenshots are always helpful (just paste any images right here in the suggestion)
+
+- type: textarea
+  id: suggestion
+  attributes:
+    label: Suggestion
+    description: What would you like to see improved?
+    placeholder: The more direct and detail is appreciated.
+  validations:
+    required: true

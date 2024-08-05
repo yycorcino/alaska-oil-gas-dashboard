@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+<a name="readme-top"></a>
 
-## Getting Started
+<!-- PROJECT LOGO -->
+<br />
+<div align="center">
+  <h3 align="center">Alaska Oil and Gas Dashboard</h3>
 
-First, run the development server:
+  <p align="center">
+    A simple analytical and visual tool of Drilling Operators and there collection of Oil, Gas, Water, and Natural Gas Liquid Production. 
+  </p>
+</div>
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+<!-- ABOUT THE PROJECT -->
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## About The Project
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+In the summer of 2024, I began developing dashboard-styled webpages as the first of many projects aimed at creating both simple and advanced analytical pages. The current project utilizes data from the [Alaska Oil and Gas Conservation Commission](http://aogweb.state.ak.us/DataMiner4/Forms/Home.aspx) Public Database.
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+By analyzing the monthly data, I observed that operators fall into two distinct categories: those who are industry leaders and those producing less than 1,000,000 barrels per month. Industry leaders, such as Hilcorp North Slope, ConocoPhillips Alaska, and Hilcorp Alaska, consistently produce at least 50 times this amount, highlighting a significant disparity in production capacity. This divide illustrates the substantial difficulties to entry and the challenges faced by less-established firms in achieving similar levels of commercial production.
 
-## Learn More
+### Built With
 
-To learn more about Next.js, take a look at the following resources:
+- [![React][react.com]][react-url]
+- [![MaterialUI][material.com]][material-url]
+- [![TypeScript][typescript.com]][typescript-url]
+- [![NextJs][nextjs.com]][nextjs-url]
+- [![Tailwind][tailwind.com]][tailwind-url]
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+<!-- USAGE EXAMPLES -->
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Usage
 
-## Deploy on Vercel
+To get started, check out src/app/actions for the important functions to extract the API data.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- Start Local Dev Environment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+  ```
+  npm run dev
+  ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+[react.com]: https://img.shields.io/badge/react-2496ED?style=for-the-badge&logo=React&logoColor=white
+[react-url]: https://react.dev/
+[webpack.com]: https://img.shields.io/badge/webpack-2496ED?style=for-the-badge&logo=Webpack&logoColor=white
+[webpack-url]: https://webpack.js.org/
+[material.com]: https://img.shields.io/badge/Material%20UI-2496ED?style=for-the-badge&logo=mui&logoColor=white
+[material-url]: https://mui.com/material-ui/
+[typescript.com]: https://shields.io/badge/TypeScript-2496ED?style=for-the-badge&logo=TypeScript&logoColor=white
+[typescript-url]: https://www.typescriptlang.org/
+[nextjs.com]: https://shields.io/badge/NextJs-2496ED?style=for-the-badge&logo=nextdotjs&logoColor=white
+[nextjs-url]: https://nextjs.org/
+[tailwind.com]: https://shields.io/badge/Tailwind-2496ED?style=for-the-badge&logo=tailwindcss&logoColor=white
+[tailwind-url]: https://tailwindcss.com/
