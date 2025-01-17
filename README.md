@@ -1,7 +1,6 @@
 <a name="readme-top"></a>
 
 <!-- PROJECT LOGO -->
-<br />
 <div align="center">
   <h3 align="center">Alaska Oil and Gas Dashboard</h3>
 
@@ -11,7 +10,6 @@
 </div>
 
 <!-- ABOUT THE PROJECT -->
-
 ## About The Project
 
 In the summer of 2024, I began developing dashboard-styled webpages as the first of many projects aimed at creating both simple and advanced analytical pages. The current project utilizes data from the [Alaska Oil and Gas Conservation Commission](http://aogweb.state.ak.us/DataMiner4/Forms/Home.aspx) Public Database.
@@ -27,7 +25,6 @@ By analyzing the monthly data, I observed that operators fall into two distinct 
 - [![Tailwind][tailwind.com]][tailwind-url]
 
 <!-- USAGE EXAMPLES -->
-
 ### Usage
 
 To get started, check out src/app/actions for the important functions to extract the API data.
