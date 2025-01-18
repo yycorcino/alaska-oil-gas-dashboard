@@ -1,3 +1,9 @@
+// find a better location to store base urls
+export const baseProdUrl: string =
+  "http://aogweb.state.ak.us/DataMiner4/WebServices/Production.asmx/GetDataTablesResponse";
+export const baseNGLUrl: string =
+  "http://aogweb.state.ak.us/DataMiner4/WebServices/NaturalGasLiquid.asmx/GetDataTablesResponse";
+
 type NglAPIResults = {
   FacilityName: string;
   Operator: string;
@@ -11,7 +17,7 @@ type NglAPITotals = {
 
 interface ListNglAPIResults extends Array<NglAPIResults> {}
 
-interface CompleteNglAPIData {
+export interface CompleteNglAPIData {
   results: ListNglAPIResults;
   totals: NglAPITotals;
 }
@@ -34,7 +40,7 @@ type ProductionAPITotals = {
 
 interface ListProductionAPIResults extends Array<ProductionAPIResults> {}
 
-interface CompleteProductionAPIData {
+export interface CompleteProductionAPIData {
   results: ListProductionAPIResults;
   totals: ProductionAPITotals;
 }
@@ -44,14 +50,14 @@ type ResourceDataType = {
   units: string;
 };
 
-interface ResourceCount {
+export interface ResourceCount {
   oilTotal: ResourceDataType;
   gasTotal: ResourceDataType;
   waterTotal: ResourceDataType;
   nglTotal: ResourceDataType;
 }
 
-type RefineProductionDataProps = {
+export type RefineProductionDataProps = {
   prodData: ListProductionAPIResults;
   nglData: ListNglAPIResults;
 };
@@ -61,7 +67,7 @@ type CountUnitType = {
   units: string;
 };
 
-type TotalOfOperators = {
+export type TotalOfOperators = {
   [OperatorName: string]: {
     Oil: CountUnitType;
     Gas: CountUnitType;
@@ -70,7 +76,7 @@ type TotalOfOperators = {
   };
 };
 
-type TotalsByWell = {
+export type TotalsByWell = {
   [WellName: string]: {
     OperatorName: string;
     Oil: CountUnitType;
@@ -79,20 +85,20 @@ type TotalsByWell = {
   };
 };
 
-type TotalsByFacility = {
+export type TotalsByFacility = {
   [operatorName: string]: {
     OperatorName: string;
     NGL: CountUnitType;
   };
 };
 
-interface RefineProductionData {
+export interface RefineProductionData {
   totalOfOperators: TotalOfOperators;
   totalsByWell: TotalsByWell;
   totalsByFacility: TotalsByFacility;
 }
 
-interface DashboardDetails {
+export interface DashboardDetails {
   resourceCount: ResourceCount;
   productionData: RefineProductionData;
   topOilWellName: string;

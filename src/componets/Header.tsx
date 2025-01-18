@@ -2,7 +2,7 @@
 
 import Button from "@mui/material/Button";
 import { useRouter, usePathname } from "next/navigation";
-import { getRecentAvailableDate } from "@/app/actions/records";
+import { getRecentAvailableDate } from "@/app/actions/apiFetcher";
 
 const Header = () => {
   const router = useRouter();

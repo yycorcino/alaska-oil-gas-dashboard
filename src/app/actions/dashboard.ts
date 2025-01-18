@@ -1,4 +1,8 @@
-"use server";
+"use server"
+
+import { getDataByMonth } from "./apiFetcher";
+import { baseProdUrl, baseNGLUrl, CompleteProductionAPIData, CompleteNglAPIData, DashboardDetails, ResourceCount, RefineProductionData
+  , RefineProductionDataProps, TotalOfOperators, TotalsByWell, TotalsByFacility } from "./interface";
 
 const deleteTypesForProduction: string[] = [
   "Permit",
@@ -22,146 +26,71 @@ const deleteTypesForNgl: string[] = [
   "Days",
 ];
 
-const baseProdUrl: string =
-  "http://aogweb.state.ak.us/DataMiner4/WebServices/Production.asmx/GetDataTablesResponse";
-const baseNGLUrl: string =
-  "http://aogweb.state.ak.us/DataMiner4/WebServices/NaturalGasLiquid.asmx/GetDataTablesResponse";
-
-/* ---------- Production/ NGL ---------- */
-
 /**
- * Function handles initial response from Alaska Production or NGL API:
- * cleans data and formatting into a manageable data structure.
+ * Controller function to get all required data for dashboard.
  *
- * @param {string} str - API response.
- * @param {string[]} deleteTypes - Keys to be deleted.
+ * @param {string} date - The target date for data.
  *
- * @returns {T} - Formatted data.
+ * @returns {DashboardDetails} - Formatted data.
  */
-const cleanResponse = <T>(str: string, deleteTypes: string[]): T => {
-  // turn string into json
-  let data = JSON.parse(str);
-
-  // remove unnecessary data
-  for (let i = 0; i < data["data"].length; i++) {
-    for (let type of deleteTypes) {
-      delete data["data"][i][type];
+export async function getDashboardDetails(date: string) {
+    const prodData: CompleteProductionAPIData | { message: string } =
+      await getDataByMonth<CompleteProductionAPIData>(
+        date,
+        "productionStartDate",
+        "productionEndDate",
+        9,
+        baseProdUrl,
+        deleteTypesForProduction
+      );
+  
+    const nglData: CompleteNglAPIData | { message: string } =
+      await getDataByMonth<CompleteNglAPIData>(
+        date,
+        "startDate",
+        "endDate",
+        6,
+        baseNGLUrl,
+        deleteTypesForNgl
+      );
+  
+    let clientData: DashboardDetails = {
+      resourceCount: {} as ResourceCount,
+      productionData: {} as RefineProductionData,
+      topOilWellName: "",
+      topGasWellName: "",
+      topGasFacilityName: "",
+    };
+    if ("totals" in prodData && "totals" in nglData) {
+      const rawResourceCount = Object.assign(
+        prodData["totals"],
+        nglData["totals"]
+      );
+      clientData["resourceCount"] = refineResourceCount(rawResourceCount);
+  
+      const rawProductionData: RefineProductionDataProps = {
+        prodData: prodData["results"],
+        nglData: nglData["results"],
+      };
+      clientData["productionData"] = refineProductionData(rawProductionData);
     }
+  
+    clientData.topOilWellName = topPerformerFilter({
+      target: "Oil",
+      data: clientData.productionData.totalsByWell,
+    });
+    clientData.topGasWellName = topPerformerFilter({
+      target: "Gas",
+      data: clientData.productionData.totalsByWell,
+    });
+    clientData.topGasFacilityName = topPerformerFilter({
+      target: "NGL",
+      data: clientData.productionData.totalsByFacility,
+    });
+  
+    return clientData as DashboardDetails;
   }
-
-  // get totals
-  let totals = data["totals"];
-  delete totals["daysTotal"];
-
-  return { results: data["data"], totals: totals } as T;
-};
-
-/**
- * Function controls the gathering of data from Alaska Production or NGL API.
- * First, get request to get total entires. Second, get request to get
- * all total entries with 1 request.
- *
- * @param {string} targetMonth - The date range of data.
- * @param {string} dateStartName - The key name for start date.
- * @param {string} dateEndName - The key name for end date.
- * @param {number} colNum - The number of total columns.
- * @param {string} url - The API Endpoint.
- * @param {string[]} deleteTypes - Keys to be deleted passed to cleanResponse Function.
- *
- * @returns {T} - Formatted data.
- */
-const getDataByMonth = async <T>(
-  targetMonth: string,
-  dateStartName: string,
-  dateEndName: string,
-  colNum: number,
-  url: string,
-  deleteTypes: string[]
-): Promise<T | { message: string }> => {
-  let payload = {
-    draw: 1,
-    start: 0,
-    length: 5,
-    sortColumn: colNum,
-    sortDirection: "desc",
-    [dateStartName]: targetMonth,
-    [dateEndName]: targetMonth,
-  };
-
-  // first request to get the total entries of month and total amount of oil, gas, water, and ngl
-  let resp1 = await fetch(
-    `${url}?requestParameters=${encodeURIComponent(JSON.stringify(payload))}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-      },
-    }
-  );
-
-  if (!resp1.ok) {
-    return { message: resp1.statusText };
-  }
-
-  const resp1Json = await resp1.json();
-  let data = JSON.parse(resp1Json["d"]);
-  payload["length"] = data["recordsFiltered"];
-
-  // second request to get all entries
-  let resp2 = await fetch(
-    `${url}?requestParameters=${encodeURIComponent(JSON.stringify(payload))}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-      },
-    }
-  );
-
-  if (!resp2.ok) {
-    return { message: resp2.statusText };
-  }
-
-  const resp2Json = await resp2.json();
-  const dataStr = resp2Json["d"];
-  let returnData = cleanResponse<T>(dataStr, deleteTypes);
-
-  return returnData as T;
-};
-
-/* ---------- Parse Data to Create Meaning ---------- */
-
-/**
- * Function gets the most recent report date.
- *
- * @returns {string} - The recent report date available in AOGCC database.
- */
-export const getRecentAvailableDate = async (): Promise<string> => {
-  const payload = {
-    draw: 1,
-    start: 0,
-    length: 2,
-    sortColumn: 9,
-    sortDirection: "desc",
-  };
-
-  let resp1 = await fetch(
-    `${baseProdUrl}?requestParameters=${encodeURIComponent(
-      JSON.stringify(payload)
-    )}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-      },
-    }
-  );
-
-  let dataJSON = await resp1.json();
-  let data = dataJSON["d"];
-  data = JSON.parse(data);
-  return data["data"][0]["ReportDate"];
-};
+  
 
 /**
  * Function sets total of all resources count and units.
@@ -368,67 +297,3 @@ const topPerformerFilter = ({
   return name as string;
 };
 
-/**
- * Controller function to get all required data for dashboard.
- *
- * @param {string} date - The target date for data.
- *
- * @returns {DashboardDetails} - Formatted data.
- */
-export async function getDashboardDetails(date: string) {
-  const prodData: CompleteProductionAPIData | { message: string } =
-    await getDataByMonth<CompleteProductionAPIData>(
-      date,
-      "productionStartDate",
-      "productionEndDate",
-      9,
-      baseProdUrl,
-      deleteTypesForProduction
-    );
-
-  const nglData: CompleteNglAPIData | { message: string } =
-    await getDataByMonth<CompleteNglAPIData>(
-      date,
-      "startDate",
-      "endDate",
-      6,
-      baseNGLUrl,
-      deleteTypesForNgl
-    );
-
-  let clientData: DashboardDetails = {
-    resourceCount: {} as ResourceCount,
-    productionData: {} as RefineProductionData,
-    topOilWellName: "",
-    topGasWellName: "",
-    topGasFacilityName: "",
-  };
-  if ("totals" in prodData && "totals" in nglData) {
-    const rawResourceCount = Object.assign(
-      prodData["totals"],
-      nglData["totals"]
-    );
-    clientData["resourceCount"] = refineResourceCount(rawResourceCount);
-
-    const rawProductionData: RefineProductionDataProps = {
-      prodData: prodData["results"],
-      nglData: nglData["results"],
-    };
-    clientData["productionData"] = refineProductionData(rawProductionData);
-  }
-
-  clientData.topOilWellName = topPerformerFilter({
-    target: "Oil",
-    data: clientData.productionData.totalsByWell,
-  });
-  clientData.topGasWellName = topPerformerFilter({
-    target: "Gas",
-    data: clientData.productionData.totalsByWell,
-  });
-  clientData.topGasFacilityName = topPerformerFilter({
-    target: "NGL",
-    data: clientData.productionData.totalsByFacility,
-  });
-
-  return clientData as DashboardDetails;
-}

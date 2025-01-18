@@ -1,4 +1,5 @@
-import { getDashboardDetails } from "@/app/actions/records";
+import { getDashboardDetails } from "@/app/actions/dashboard";
+import { DashboardDetails } from "@/app/actions/interface";
 import MonthSelector from "@/componets/MonthSelector";
 import EBarStackChart from "@/componets/echarts/EBarStackChart";
 import EPieChart from "@/componets/echarts/EPieChart";
