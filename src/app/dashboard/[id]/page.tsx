@@ -1,3 +1,7 @@
+"use client"
+
+import * as React from 'react';
+import { useState, useEffect } from 'react';
 import { getDashboardDetails } from "@/app/actions/dashboard";
 import { DashboardDetails } from "@/app/actions/interface";
 import MonthSelector from "@/componets/MonthSelector";
@@ -11,9 +15,21 @@ export default async function Dashboard({
 }: {
   params: { id: string };
 }) {
-  const details: DashboardDetails = await getDashboardDetails(
-    params.id.replace("-", "/")
-  );
+  const [details, setDetails] = useState<DashboardDetails | null>(null);
+  const id = params.id.replace("-", "/");
+
+  useEffect(() => {
+    const fetchDetails = async () => {
+      const data = await getDashboardDetails(id);
+      setDetails(data);
+    };
+
+    fetchDetails();
+  }, [id]);
+
+  // const details: DashboardDetails = await getDashboardDetails(
+  //   params.id.replace("-", "/")
+  // );
 
   const isDetailsEmpty =
     Object.keys(details.productionData.totalOfOperators).length === 0 &&

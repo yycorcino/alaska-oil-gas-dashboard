@@ -1,5 +1,3 @@
-"use server"
-
 import { getDataByMonth } from "./apiFetcher";
 import { baseProdUrl, baseNGLUrl, CompleteProductionAPIData, CompleteNglAPIData, DashboardDetails, ResourceCount, RefineProductionData
   , RefineProductionDataProps, TotalOfOperators, TotalsByWell, TotalsByFacility } from "./interface";

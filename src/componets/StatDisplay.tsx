@@ -1,9 +1,9 @@
 "use server";
 
 const StatDisplay = ({
-  heading,
-  description,
-  value,
+  heading = "",
+  description = "",
+  value = "",
 }: {
   heading: string;
   description?: string;
