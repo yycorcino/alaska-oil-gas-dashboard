@@ -2,6 +2,7 @@
 
 import React from "react";
 import ReactECharts from "echarts-for-react";
+import { ResourceCount, ResourceDataType } from "@/app/actions/interface";
 
 type OptionProps = {
   name: string;
