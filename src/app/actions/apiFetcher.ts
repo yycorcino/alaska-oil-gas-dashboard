@@ -12,7 +12,7 @@ import { baseProdUrl, baseNGLUrl } from "./interface";
  *
  * @returns {T} - Formatted data.
  */
-export const cleanResponse = async <T>(str: string, deleteTypes: string[]): T => {
+export const cleanResponse = async <T>(str: string, deleteTypes: string[]): Promise<T> => {
   // turn string into json
   let data = JSON.parse(str);
 

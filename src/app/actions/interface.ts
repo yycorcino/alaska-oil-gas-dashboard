@@ -45,7 +45,7 @@ export interface CompleteProductionAPIData {
   totals: ProductionAPITotals;
 }
 
-type ResourceDataType = {
+export type ResourceDataType = {
   count: number;
   units: string;
 };

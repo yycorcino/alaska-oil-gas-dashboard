@@ -1,6 +1,7 @@
 "use client";
 
 import ReactECharts from "echarts-for-react";
+import { TotalOfOperators } from "@/app/actions/interface";
 
 interface SeriesDataInterface {
   name: string;
