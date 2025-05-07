@@ -1,7 +1,8 @@
-"use client"
+"use client";
 
-import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { use } from "react";
+import * as React from "react";
+import { useState, useEffect } from "react";
 import { getDashboardDetails } from "@/app/actions/dashboard";
 import { DashboardDetails } from "@/app/actions/interface";
 import MonthSelector from "@/componets/MonthSelector";
@@ -10,26 +11,23 @@ import EPieChart from "@/componets/echarts/EPieChart";
 import StatDisplay from "@/componets/StatDisplay";
 import Header from "@/componets/Header";
 
-export default async function Dashboard({
-  params,
-}: {
-  params: { id: string };
-}) {
+export default function Dashboard({ params }: { params: Promise<{ id: string }> }) {
+  const { id: rawId } = use(params);
+  const id = rawId.replace("-", "/");
+
   const [details, setDetails] = useState<DashboardDetails | null>(null);
-  const id = params.id.replace("-", "/");
 
   useEffect(() => {
     const fetchDetails = async () => {
       const data = await getDashboardDetails(id);
       setDetails(data);
     };
-
     fetchDetails();
   }, [id]);
 
-  // const details: DashboardDetails = await getDashboardDetails(
-  //   params.id.replace("-", "/")
-  // );
+  if (!details) {
+    return <p>Loading...</p>;
+  }
 
   const isDetailsEmpty =
     Object.keys(details.productionData.totalOfOperators).length === 0 &&
@@ -69,20 +67,10 @@ export default async function Dashboard({
               <StatDisplay
                 heading="Total Wells"
                 description="This month"
-                value={Object.keys(
-                  details.productionData.totalsByWell
-                ).length.toLocaleString()}
+                value={Object.keys(details.productionData.totalsByWell).length.toLocaleString()}
               />
-              <StatDisplay
-                heading="Top Performing"
-                description="Gas Well"
-                value={details.topGasWellName}
-              />
-              <StatDisplay
-                heading="Top Performing"
-                description="Oil Well"
-                value={details.topOilWellName}
-              />
+              <StatDisplay heading="Top Performing" description="Gas Well" value={details.topGasWellName} />
+              <StatDisplay heading="Top Performing" description="Oil Well" value={details.topOilWellName} />
               <StatDisplay
                 heading="Top Performing"
                 description="Natural Gas Facility"
